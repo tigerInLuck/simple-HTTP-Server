@@ -49,6 +49,7 @@ public class HttpServer : IAsyncDisposable
         while (isAlive)
         {
             Socket remote = await socketServer.AcceptAsync();
+            Console.WriteLine($"Accepted the remote: {remote.RemoteEndPoint}");
             await Task.Factory.StartNew(() => httpHandler.DoItAsync(remote));
         }
     }
