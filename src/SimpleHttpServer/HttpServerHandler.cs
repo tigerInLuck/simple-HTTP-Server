@@ -39,31 +39,31 @@ public class HttpServerHandler
         // Get the network stream
         NetworkStream stream = new(remote, true);
 
-        // Check the HTTP protocol flag: GET / HTTP/1.1
-        string requestLine = ReadHeaderLine(stream);
-        if (requestLine == "-1")
+        // Check the HTTP protocol Start-Line: GET / HTTP/1.1
+        string startLine = ReadLine(stream);
+        if (startLine == "-1")
             return;
 
-        if (!requestLine.Contains("HTTP/"))
+        if (!startLine.Contains("HTTP/"))
             throw new Exception("Invalid HTTP Request.");
-        string[] headflags = requestLine.Split(' ', StringSplitOptions.TrimEntries);
-        if (headflags.Length != 3)
+        string[] startLineFlags = startLine.Split(' ', StringSplitOptions.TrimEntries);
+        if (startLineFlags.Length != 3)
             throw new Exception("Invalid HTTP Request.");
         //Console.WriteLine($"the header  -->  {requestLine}\r\n");
 
-        // Cheek the request header
+        // Cheek the request headers
         string headerLine;
         Dictionary<string, string> headers = new();
         do
         {
-            headerLine = ReadHeaderLine(stream);
-            if (string.IsNullOrWhiteSpace(headerLine) || headerLine == "-1") break;
+            headerLine = ReadLine(stream);
+            if (headerLine is "") break;
             int separator = headerLine.IndexOf(':');
             if (separator == -1)
                 throw new Exception($"Invalid HTTP Request Header Line: {headerLine}");
             headers.TryAdd(headerLine[..separator], headerLine[(separator + 1)..].Trim());
             //Console.WriteLine($"the header  -->  {headerLine}\r\n");
-        } while (!string.IsNullOrWhiteSpace(headerLine));
+        } while (headerLine is not "");
 
         // Check the request content
         string content = null;
@@ -114,7 +114,7 @@ public class HttpServerHandler
         Console.WriteLine($"Cost time: {sw.Elapsed.TotalMilliseconds} ms");
     }
 
-    string ReadHeaderLine(Stream stream)
+    string ReadLine(Stream stream)
     {
         /* see the all http request document:
 
@@ -124,7 +124,7 @@ public class HttpServerHandler
 
         */
 
-        //Console.WriteLine("Calling ReadHeaderLine()...");
+        //Console.WriteLine("Calling ReadLine()...");
         StringBuilder headerLine = new();
         while (true)
         {
@@ -141,9 +141,9 @@ public class HttpServerHandler
                     //Console.WriteLine("-1: stream.DisposeAsync()...");
                     return "-1";
                 default:
-                    char c = Convert.ToChar(data);
+                    //char c = Convert.ToChar(data);
                     //Console.WriteLine("get ASCII code: {0, -5}  -->  {1}", data, c);
-                    headerLine.Append(c);
+                    headerLine.Append(Convert.ToChar(data));
                     break;
             }
         }
@@ -151,3 +151,39 @@ public class HttpServerHandler
 
     #endregion
 }
+
+// =============== HTTP Request Headers like this: ===============
+
+// GET / HTTP/1.1
+// Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+// Accept-Encoding: gzip, deflate, br
+// Accept-Language: en-GB,en;q=0.9,zh-CN;q=0.8,zh;q=0.7
+// Cache-Control: no-cache
+// Connection: keep-alive
+// Host: localhost:8888
+// Pragma: no-cache
+// Sec-Fetch-Dest: document
+// Sec-Fetch-Mode: navigate
+// Sec-Fetch-Site: none
+// Sec-Fetch-User: ?1
+// Upgrade-Insecure-Requests: 1
+// User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.188
+// sec-ch-ua: "Not/A)Brand";v="99", "Microsoft Edge";v="115", "Chromium";v="115"
+// sec-ch-ua-mobile: ?0
+// sec-ch-ua-platform: "Windows"
+//
+// (the empty line "\r\n")
+//
+// content (body)...
+
+// =============== HTTP Request Headers like this: ===============
+
+// HTTP/1.1 200 OK
+// Server: .NET 6 Sockets
+// Content-Type: text/html; charset=utf-8
+// Content-Length: 87
+//
+// (the empty line "\r\n")
+//
+// response content...
+
