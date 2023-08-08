@@ -29,10 +29,10 @@ public class HttpServerHandler
     /// <summary>
     /// Handle the remote client connection.
     /// </summary>
-    public async void DoItAsync(Socket remote)
+    public async void HandleRequestAsync(Socket remote)
     {
         Stopwatch sw = Stopwatch.StartNew();
-        //Console.WriteLine("Calling DoItAsync()...");
+        //Console.WriteLine("Calling HandleRequestAsync()...");
         // TODO: parse http header params
         // TODO: parse route
         // TODO: deal the request and return response data

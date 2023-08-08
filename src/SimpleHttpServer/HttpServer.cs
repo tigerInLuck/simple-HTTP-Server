@@ -64,7 +64,7 @@ public class HttpServer : IAsyncDisposable
             {
                 Socket remote = await socketServer.AcceptAsync();
                 Console.WriteLine($"Accepted the remote: {remote.RemoteEndPoint}, {DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}");
-                await Task.Factory.StartNew(() => httpHandler.DoItAsync(remote));
+                await Task.Factory.StartNew(() => httpHandler.HandleRequestAsync(remote));
                 remote.Close();
                 await Task.Delay(1);
             }
