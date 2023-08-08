@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SimpleHttpServer;
 
@@ -30,9 +30,9 @@ public class HttpServerHandler
     /// Handle the remote client connection.
     /// </summary>
     public async void DoItAsync(Socket remote)
-
     {
-        Console.WriteLine("Calling DoItAsync()...");
+        Stopwatch sw = Stopwatch.StartNew();
+        //Console.WriteLine("Calling DoItAsync()...");
         // TODO: parse http header params
         // TODO: parse route
         // TODO: deal the request and return response data
@@ -40,7 +40,7 @@ public class HttpServerHandler
         NetworkStream stream = new(remote, true);
 
         // Check the HTTP protocol flag: GET / HTTP/1.1
-        string requestLine = await ReadHeaderLine(stream);
+        string requestLine = ReadHeaderLine(stream);
         if (requestLine == "-1")
             return;
 
@@ -49,20 +49,20 @@ public class HttpServerHandler
         string[] headflags = requestLine.Split(' ', StringSplitOptions.TrimEntries);
         if (headflags.Length != 3)
             throw new Exception("Invalid HTTP Request.");
-        Console.WriteLine($"the header  -->  {requestLine}\r\n");
+        //Console.WriteLine($"the header  -->  {requestLine}\r\n");
 
         // Cheek the request header
         string headerLine;
         Dictionary<string, string> headers = new();
         do
         {
-            headerLine = await ReadHeaderLine(stream);
+            headerLine = ReadHeaderLine(stream);
             if (string.IsNullOrWhiteSpace(headerLine) || headerLine == "-1") break;
             int separator = headerLine.IndexOf(':');
             if (separator == -1)
                 throw new Exception($"Invalid HTTP Request Header Line: {headerLine}");
             headers.TryAdd(headerLine[..separator], headerLine[(separator + 1)..].Trim());
-            Console.WriteLine($"the header  -->  {headerLine}\r\n");
+            //Console.WriteLine($"the header  -->  {headerLine}\r\n");
         } while (!string.IsNullOrWhiteSpace(headerLine));
 
         // Check the request content
@@ -70,7 +70,7 @@ public class HttpServerHandler
         byte[] contentBytes = null;
         if (headers.TryGetValue("Content-Length", out string length))
         {
-            Console.WriteLine(length);
+            //Console.WriteLine(length);
             int total = Convert.ToInt32(length);
             int canRead = total;
             contentBytes = new byte[total];
@@ -85,38 +85,36 @@ public class HttpServerHandler
             }
             content = Encoding.UTF8.GetString(contentBytes);
         }
-        Console.WriteLine($"the http request content  -->  {content}");
+        //Console.WriteLine($"the http request content  -->  {content}");
 
         // Response
-        string respFlag = "HTTP/1.1 200 OK\r\n";
-        byte[] b1 = Encoding.UTF8.GetBytes(respFlag);
-        await stream.WriteAsync(b1, 0, b1.Length);
+        byte[] headerToken1 = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\nServer: .NET 6 Sockets\r\n");
+        await stream.WriteAsync(headerToken1, 0, headerToken1.Length);
 
         byte[] respBytes;
         if (contentBytes is { Length: > 0 })
         {
-            string x = $"{content}\r\n{DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}";
-            respBytes = Encoding.UTF8.GetBytes(x);
-            string txt2 = $"Content-Type: text/html\r\nContent-Length: {respBytes.Length}\r\n\r\n";
-            byte[] b2 = Encoding.UTF8.GetBytes(txt2);
-            await stream.WriteAsync(b2, 0, b2.Length);
+            respBytes = Encoding.UTF8.GetBytes($"{content}\r\n{DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}");
+            byte[] headerToken2 = Encoding.UTF8.GetBytes($"Content-Type: text/html\r\nContent-Length: {respBytes.Length}\r\n\r\n");
+            await stream.WriteAsync(headerToken2, 0, headerToken2.Length);
         }
         else
         {
-            string x = $"This is a default response content by Simple-HTTP-Server...\r\n{DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}";
-            respBytes = Encoding.UTF8.GetBytes(x);
-            string txt2 = $"Content-Type: text/html\r\nContent-Length: {respBytes.Length}\r\n\r\n";
-            byte[] b2 = Encoding.UTF8.GetBytes(txt2);
-            await stream.WriteAsync(b2, 0, b2.Length);
+            respBytes = Encoding.UTF8.GetBytes($"This is a default response content by Simple-HTTP-Server...\r\n{DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}");
+            byte[] headerToken2 = Encoding.UTF8.GetBytes($"Content-Type: text/html\r\nContent-Length: {respBytes.Length}\r\n\r\n");
+            await stream.WriteAsync(headerToken2, 0, headerToken2.Length);
         }
 
         await stream.WriteAsync(respBytes, 0, respBytes.Length);
         await stream.FlushAsync();
         stream.Close();
         await stream.DisposeAsync();
+
+        sw.Stop();
+        Console.WriteLine($"Cost time: {sw.Elapsed.TotalMilliseconds} ms");
     }
 
-    async Task<string> ReadHeaderLine(Stream stream)
+    string ReadHeaderLine(Stream stream)
     {
         /* see the all http request document:
 
@@ -126,26 +124,25 @@ public class HttpServerHandler
 
         */
 
-        Console.WriteLine("Calling ReadHeaderLine()...");
+        //Console.WriteLine("Calling ReadHeaderLine()...");
         StringBuilder headerLine = new();
-        int data;
         while (true)
         {
-            data = stream.ReadByte();
+            int data = stream.ReadByte();
             switch (data)
             {
                 case '\r':
-                    Console.WriteLine(@"get ASCII code: {0, -5}  -->  \r", data);
+                    //Console.WriteLine(@"get ASCII code: {0, -5}  -->  \r", data);
                     continue;
                 case '\n':
-                    Console.WriteLine(@"get ASCII code: {0, -5}  -->  \n", data);
+                    //Console.WriteLine(@"get ASCII code: {0, -5}  -->  \n", data);
                     return headerLine.ToString();
                 case -1:
-                    Console.WriteLine("-1: stream.DisposeAsync()...");
+                    //Console.WriteLine("-1: stream.DisposeAsync()...");
                     return "-1";
                 default:
                     char c = Convert.ToChar(data);
-                    Console.WriteLine("get ASCII code: {0, -5}  -->  {1}", data, c);
+                    //Console.WriteLine("get ASCII code: {0, -5}  -->  {1}", data, c);
                     headerLine.Append(c);
                     break;
             }

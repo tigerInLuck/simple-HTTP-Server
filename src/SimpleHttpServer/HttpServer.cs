@@ -36,21 +36,43 @@ public class HttpServer : IAsyncDisposable
 
     #region Implementations
 
+    void Initial()
+    {
+        isAlive = true;
+        if (socketServer is { Connected: false })
+        {
+            socketServer.Close();
+            socketServer.Dispose();
+            socketServer = null;
+        }
+
+        socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socketServer.Bind(new IPEndPoint(ip, port));
+        socketServer.Listen(1000);
+    }
+
     /// <summary>
     /// Starts the HTTP Server.
     /// </summary>
     public async Task StartAsnyc()
     {
+        Initial();
         httpHandler = new HttpServerHandler();
-        socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        socketServer.Bind(new IPEndPoint(ip, port));
-        socketServer.Listen();
-        isAlive = true;
         while (isAlive)
         {
-            Socket remote = await socketServer.AcceptAsync();
-            Console.WriteLine($"Accepted the remote: {remote.RemoteEndPoint}");
-            await Task.Factory.StartNew(() => httpHandler.DoItAsync(remote));
+            try
+            {
+                Socket remote = await socketServer.AcceptAsync();
+                Console.WriteLine($"Accepted the remote: {remote.RemoteEndPoint}, {DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}");
+                await Task.Factory.StartNew(() => httpHandler.DoItAsync(remote));
+                remote.Close();
+                await Task.Delay(1);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.StackTrace);
+                Initial();
+            }
         }
     }
 
