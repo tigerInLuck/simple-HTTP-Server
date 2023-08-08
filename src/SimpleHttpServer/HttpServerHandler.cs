@@ -95,13 +95,13 @@ public class HttpServerHandler
         if (contentBytes is { Length: > 0 })
         {
             respBytes = Encoding.UTF8.GetBytes($"{content}\r\n{DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}");
-            byte[] headerToken2 = Encoding.UTF8.GetBytes($"Content-Type: text/html\r\nContent-Length: {respBytes.Length}\r\n\r\n");
+            byte[] headerToken2 = Encoding.UTF8.GetBytes($"Content-Type: text/html; charset=utf-8\r\nContent-Length: {respBytes.Length}\r\n\r\n");
             await stream.WriteAsync(headerToken2, 0, headerToken2.Length);
         }
         else
         {
             respBytes = Encoding.UTF8.GetBytes($"This is a default response content by Simple-HTTP-Server...\r\n{DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}");
-            byte[] headerToken2 = Encoding.UTF8.GetBytes($"Content-Type: text/html\r\nContent-Length: {respBytes.Length}\r\n\r\n");
+            byte[] headerToken2 = Encoding.UTF8.GetBytes($"Content-Type: text/html; charset=utf-8\r\nContent-Length: {respBytes.Length}\r\n\r\n");
             await stream.WriteAsync(headerToken2, 0, headerToken2.Length);
         }
 
