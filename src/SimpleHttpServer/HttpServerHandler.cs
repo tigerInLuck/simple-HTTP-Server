@@ -176,7 +176,7 @@ public class HttpServerHandler
 //
 // content (body)...
 
-// =============== HTTP Request Headers like this: ===============
+// =============== HTTP Response Headers like this: ===============
 
 // HTTP/1.1 200 OK
 // Server: .NET 6 Sockets
