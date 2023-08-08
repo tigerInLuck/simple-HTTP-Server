@@ -88,8 +88,8 @@ public class HttpServerHandler
         Console.WriteLine($"the http request content  -->  {content}");
 
         // Response
-        string txt1 = string.Format("HTTP/1.1 {0} {1}\r\n", 200, "OK");
-        byte[] b1 = Encoding.UTF8.GetBytes(txt1);
+        string respFlag = "HTTP/1.1 200 OK\r\n";
+        byte[] b1 = Encoding.UTF8.GetBytes(respFlag);
         await stream.WriteAsync(b1, 0, b1.Length);
 
         byte[] respBytes;
