@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SimpleHttpServer;
 
@@ -17,9 +19,19 @@ public class HttpServerHandler
     /// <summary>
     /// Initializes a new instance of the <see cref="HttpServerHandler"/> class.
     /// </summary>
-    public HttpServerHandler()
+    public HttpServerHandler(int worker)
     {
-
+        RemoteSockets = new ConcurrentQueue<Socket>();
+        for (int i = 0; i < worker; i++)
+        {
+            Thread threadWorker = new(FetchRequest)
+            {
+                Name = $"threadWorker-{i + 1}",
+                IsBackground = true
+            };
+            threadWorker.Start();
+            Console.WriteLine($"{threadWorker.Name} has been started...");
+        }
     }
 
     #endregion
@@ -27,17 +39,42 @@ public class HttpServerHandler
     #region Implementations
 
     /// <summary>
+    /// Fetch the requests task.
+    /// </summary>
+    async void FetchRequest()
+    {
+        while (Thread.CurrentThread.IsAlive)
+        {
+            //Console.WriteLine($"RemoteSockets.Count = {RemoteSockets.Count}");
+            if (RemoteSockets.TryDequeue(out Socket remote))
+            {
+                try
+                {
+                    await HandleRequestAsync(remote);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.StackTrace);
+                }
+                remote.Close();
+            }
+            Thread.Sleep(0);
+        }
+    }
+
+    /// <summary>
     /// Handle the remote client connection.
     /// </summary>
-    public async void HandleRequestAsync(Socket remote)
+    public async Task HandleRequestAsync(Socket remote)
     {
-        Stopwatch sw = Stopwatch.StartNew();
+        //Stopwatch sw = Stopwatch.StartNew();
         //Console.WriteLine("Calling HandleRequestAsync()...");
         // TODO: parse http header params
         // TODO: parse route
         // TODO: deal the request and return response data
         // Get the network stream
-        NetworkStream stream = new(remote, true);
+        //Console.WriteLine($"{Thread.CurrentThread.Name}, remote.Connected={remote.Connected}");
+        NetworkStream stream = new(remote);
 
         // Check the HTTP protocol Start-Line: GET / HTTP/1.1
         string startLine = ReadLine(stream);
@@ -108,10 +145,10 @@ public class HttpServerHandler
         await stream.WriteAsync(respBytes, 0, respBytes.Length);
         await stream.FlushAsync();
         stream.Close();
-        await stream.DisposeAsync();
+        //await stream.DisposeAsync();
 
-        sw.Stop();
-        Console.WriteLine($"Cost time: {sw.Elapsed.TotalMilliseconds} ms");
+        //sw.Stop();
+        //Console.WriteLine($"Cost time: {sw.Elapsed.TotalMilliseconds} ms");
     }
 
     string ReadLine(Stream stream)
@@ -148,6 +185,12 @@ public class HttpServerHandler
             }
         }
     }
+
+    #endregion
+
+    #region Utility
+
+    public readonly ConcurrentQueue<Socket> RemoteSockets;
 
     #endregion
 }
