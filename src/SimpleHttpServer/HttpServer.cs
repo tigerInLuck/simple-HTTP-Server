@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleHttpServer;
@@ -65,7 +64,7 @@ public class HttpServer : IAsyncDisposable
             {
                 httpHandler.RemoteSockets.Enqueue(await socketServer.AcceptAsync());
                 Console.WriteLine($"Accepted the remote: {DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}");
-                Thread.Sleep(1);
+                await Task.Delay(1);
             }
             catch (Exception ex)
             {

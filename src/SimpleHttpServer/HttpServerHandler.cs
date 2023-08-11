@@ -58,7 +58,7 @@ public class HttpServerHandler
                 }
                 remote.Close();
             }
-            Thread.Sleep(0);
+            await Task.Delay(0);
         }
     }
 
