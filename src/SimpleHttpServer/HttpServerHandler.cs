@@ -86,7 +86,6 @@ public class HttpServerHandler
         string[] startLineFlags = startLine.Split(' ', StringSplitOptions.TrimEntries);
         if (startLineFlags.Length != 3)
             throw new Exception("Invalid HTTP Request.");
-        //Console.WriteLine($"the header  -->  {requestLine}\r\n");
 
         // Cheek the request headers
         string headerLine;
@@ -99,7 +98,6 @@ public class HttpServerHandler
             if (separator == -1)
                 throw new Exception($"Invalid HTTP Request Header Line: {headerLine}");
             headers.TryAdd(headerLine[..separator], headerLine[(separator + 1)..].Trim());
-            //Console.WriteLine($"the header  -->  {headerLine}\r\n");
         } while (headerLine is not "");
 
         // Check the request content
