@@ -86,7 +86,6 @@ public class HttpServerHandler
         string[] startLineFlags = startLine.Split(' ', StringSplitOptions.TrimEntries);
         if (startLineFlags.Length != 3)
             throw new Exception("Invalid HTTP Request.");
-        //Console.WriteLine($"the header  -->  {requestLine}\r\n");
 
         // Cheek the request headers
         string headerLine;
@@ -99,7 +98,6 @@ public class HttpServerHandler
             if (separator == -1)
                 throw new Exception($"Invalid HTTP Request Header Line: {headerLine}");
             headers.TryAdd(headerLine[..separator], headerLine[(separator + 1)..].Trim());
-            //Console.WriteLine($"the header  -->  {headerLine}\r\n");
         } while (headerLine is not "");
 
         // Check the request content
@@ -122,10 +120,9 @@ public class HttpServerHandler
             }
             content = Encoding.UTF8.GetString(contentBytes);
         }
-        //Console.WriteLine($"the http request content  -->  {content}");
 
         // Response
-        byte[] headerToken1 = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\nServer: .NET 6 Sockets\r\n");
+        byte[] headerToken1 = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\nServer: .NET 6 Sockets ServiceProvider\r\n");
         await stream.WriteAsync(headerToken1, 0, headerToken1.Length);
 
         byte[] respBytes;
@@ -145,10 +142,6 @@ public class HttpServerHandler
         await stream.WriteAsync(respBytes, 0, respBytes.Length);
         await stream.FlushAsync();
         stream.Close();
-        //await stream.DisposeAsync();
-
-        //sw.Stop();
-        //Console.WriteLine($"Cost time: {sw.Elapsed.TotalMilliseconds} ms");
     }
 
     string ReadLine(Stream stream)
@@ -161,7 +154,6 @@ public class HttpServerHandler
 
         */
 
-        //Console.WriteLine("Calling ReadLine()...");
         StringBuilder headerLine = new();
         while (true)
         {

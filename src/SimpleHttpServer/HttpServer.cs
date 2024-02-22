@@ -63,7 +63,7 @@ public class HttpServer : IAsyncDisposable
             try
             {
                 httpHandler.RemoteSockets.Enqueue(await socketServer.AcceptAsync());
-                Console.WriteLine($"Accepted the remote: {DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}");
+                Console.WriteLine($"Accepted the remote request: {DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff}");
                 await Task.Delay(1);
             }
             catch (Exception ex)

@@ -3,6 +3,6 @@
 using SimpleHttpServer;
 using System;
 
-Console.WriteLine("Simple HTTP Server base on the Sockets.");
+Console.WriteLine("Simple HTTP Server base on the .NET 6 Sockets ServiceProvider.");
 HttpServer httpServer = new();
 await httpServer.StartAsnyc();
